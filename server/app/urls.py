@@ -1,6 +1,6 @@
 from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
-from .profiles.controller import user_list, user_detail
+from .users.controller import user_list, user_detail
 from .drives.controller import user_drive_list, user_drive_detail
 from rest_framework.authtoken import views
 

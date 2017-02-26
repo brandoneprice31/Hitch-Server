@@ -8,7 +8,7 @@ from rest_framework.authtoken.models import Token
 class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profileImage = models.ImageField(upload_to='profile_images/',blank=True)
+    profile_image = models.ImageField(upload_to='profile_images/',blank=True)
 
 
     def __str__ (self):

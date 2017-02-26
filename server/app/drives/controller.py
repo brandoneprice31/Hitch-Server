@@ -17,6 +17,8 @@ def user_drive_list(request):
     if request.user.is_anonymous:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+
+    # GET
     if request.method == 'GET':
 
         drives = Drive.objects.filter(user=request.user).values()
@@ -24,6 +26,8 @@ def user_drive_list(request):
 
         return Response(driveSerializer.data, status.HTTP_200_OK)
 
+
+    # POST
     elif request.method == 'POST':
         try:
             drive = Drive.object.create()
@@ -36,23 +40,31 @@ def user_drive_list(request):
         return Response(json, status.HTTP_201_CREATED)
 
 
+
+
+
 @api_view(['GET', 'DELETE'])
 def user_drive_detail(request, pk):
-    """
-    Retrieve, update or delete a user instance.
-    """
+
+    # Get the drive
     try:
         drive = Drive.objects.get(pk=pk)
     except:
         return Response(status.HTTP_400_BAD_REQUEST)
 
+
+    # Check if the user is authorized to view that drive.
     if request.user.id != drive.user.id:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+
+    # GET
     if request.method == 'GET':
         driveSerializer = DriveSerializer(drive)
         return Response(driveSerializer.data, status=status.HTTP_200_OK)
 
+
+    # DELETE
     elif request.method == 'DELETE':
         drive.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
