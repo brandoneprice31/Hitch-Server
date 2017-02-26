@@ -50,7 +50,13 @@ def user_list(request):
             }
 
             return Response(response, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        elif 'email' in data:
+            if User.objects.filter(username=data['email']).exists():
+                return Response(status=status.HTTP_409_CONFLICT)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 

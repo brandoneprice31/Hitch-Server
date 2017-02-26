@@ -18,7 +18,7 @@ def user_drive_list(request):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     if request.method == 'GET':
-        
+
         drives = Drive.objects.filter(user=request.user).values()
         driveSerializer = DriveSerializer(drives,many=True)
 
@@ -28,7 +28,8 @@ def user_drive_list(request):
         try:
             drive = Drive.object.create()
             json = json.loads(request.body)
-            drive.loadFromJSON(json.loads(request.body))
+            print(json.__dict__)
+            drive.loadFromJSON(json)
             drive.save()
         except:
             return Response(status.HTTP_400_BAD_REQUEST)
