@@ -83,18 +83,27 @@ def user_list(request):
                 # Get the user's profile and save new information.
                 profile = Profile.objects.get(user=user)
 
-                with open(profile.profile_image.name, "rb") as image_file:
-                    encoded_string = base64.b64encode(image_file.read())
+                try:
+                    with open(profile.profile_image.name, "rb") as image_file:
+                        encoded_string = base64.b64encode(image_file.read())
 
-                response = {
-                    'id' : user.id,
-                    'first_name' : user.first_name,
-                    'last_name' : user.last_name,
-                    'email' : user.email,
-                    'token' : Token.objects.get_or_create(user=user)[0].key,
-                    'profile_image' : encoded_string
-                }
-
+                        response = {
+                            'id' : user.id,
+                            'first_name' : user.first_name,
+                            'last_name' : user.last_name,
+                            'email' : user.email,
+                            'token' : Token.objects.get_or_create(user=user)[0].key,
+                            'profile_image' : encoded_string
+                        }
+                except:
+                    response = {
+                        'id' : user.id,
+                        'first_name' : user.first_name,
+                        'last_name' : user.last_name,
+                        'email' : user.email,
+                        'token' : Token.objects.get_or_create(user=user)[0].key
+                    }
+                    
                 return Response(response, status=status.HTTP_202_ACCEPTED)
             else:
                 return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -115,6 +124,7 @@ def user_detail(request, pk):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
+
     # GET
     if request.method == 'GET':
         serializer = UserSerializer(user)
@@ -126,7 +136,7 @@ def user_detail(request, pk):
     elif request.method == 'DELETE':
 
         # Only the authorized user can delete themselves.
-        if request.user.id == user.id:
+        if request.user.id == pk:
             request.user.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
