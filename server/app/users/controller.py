@@ -103,7 +103,7 @@ def user_list(request):
                         'email' : user.email,
                         'token' : Token.objects.get_or_create(user=user)[0].key
                     }
-                    
+
                 return Response(response, status=status.HTTP_202_ACCEPTED)
             else:
                 return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -148,6 +148,7 @@ def user_detail(request, pk):
 def log_out(request):
 
     # Only users with tokens can log out.
+
     if request.user.is_anonymous():
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 

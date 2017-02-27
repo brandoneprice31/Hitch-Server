@@ -9,7 +9,7 @@ urlpatterns = [
     url(r'^users/$', user_list),
     url(r'^users/(?P<pk>[0-9]+)$', user_detail),
     url(r'^get-users-token/$', views.obtain_auth_token),
-    url(r'^log-out$', log_out),
+    url(r'^log-out/$', log_out),
     url(r'^user-drives/$' ,user_drive_list),
     url(r'^user-drives/(?P<pk>[0-9]+)$', user_drive_detail)
 ]

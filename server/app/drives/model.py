@@ -16,16 +16,15 @@ class Drive(models.Model):
     start_long = models.FloatField()
     start_title = models.CharField(max_length = 100)
     start_sub_title = models.CharField(max_length = 100)
-    start_time = models.TimeField()
+    start_date_time = models.DateTimeField()
     end_lat = models.FloatField()
     end_long = models.FloatField()
     end_title = models.CharField(max_length = 100)
     end_sub_title = models.CharField(max_length = 100)
-    end_time = models.TimeField()
+    end_date_time = models.DateTimeField()
 
     # Occurrence Info
     repeated_week_days = fields.ArrayField(models.IntegerField())
-    start_date = models.DateField()
 
     # Polyline
     polyline = models.BinaryField(blank=True)
