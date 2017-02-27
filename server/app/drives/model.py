@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 from django.contrib.postgres import fields
+import base64
 
 # Create your models here.
 class Drive(models.Model):
@@ -27,26 +28,8 @@ class Drive(models.Model):
     repeated_week_days = fields.ArrayField(models.IntegerField())
 
     # Polyline
-    polyline = models.BinaryField(blank=True)
+    polyline = models.FileField(upload_to='./app/drives/files/', blank=True)
 
 
     def __str__ (self):
         return str(self.id)
-
-    def loadFromJSON (json):
-
-        if 'user' in json:
-            self.user = json['user']
-        self.start_lat = json['start_lat']
-        self.start_long = json['start_long']
-        self.start_title = json['start_title']
-        self.start_sub_title = json['start_sub_title']
-        self.start_time = json['start_time']
-        self.end_lat = json['end_lat']
-        self.end_long = json['end_long']
-        self.end_title = json['end_title']
-        self.end_sub_title = json['end_sub_title']
-        self.end_time = json['end_time']
-        self.repeated_week_days = json['repeated_week_days']
-        self.start_date = json['start_date']
-        self.polyline = json['polyline']

@@ -8,6 +8,10 @@ from django.contrib.auth.models import User
 from .serializer import DriveSerializer
 import json
 from django.core import serializers
+from django.utils.timezone import get_current_timezone
+from django.utils.dateparse import parse_datetime
+from django.core.files.base import ContentFile
+import base64
 
 
 @api_view(['GET', 'POST'])
@@ -29,15 +33,35 @@ def user_drive_list(request):
 
     # POST
     elif request.method == 'POST':
+
+        data = json.loads(request.body)
+        start_lat = data['start_lat']
+        start_long = data['start_long']
+        start_title = data['start_title']
+        start_sub_title = data['start_sub_title']
+        start_date_time = parse_datetime(data['start_date_time'])
+        end_lat = data['end_lat']
+        end_long = data['end_long']
+        end_title = data['end_title']
+        end_sub_title = data['end_sub_title']
+        end_date_time = parse_datetime(data['end_date_time'])
+        repeated_week_days = data['repeated_week_days']
+
         try:
-            drive = Drive.object.create()
-            json = json.loads(request.body)
-            print(json.__dict__)
-            drive.loadFromJSON(json)
-            drive.save()
+            drive = Drive.objects.create(user=request.user, start_lat=start_lat,
+                                    start_long=start_long, start_title=start_title,
+                                    start_date_time=start_date_time, end_lat=end_lat,
+                                    end_long=end_long, end_title=end_title,
+                                    end_sub_title=end_sub_title, end_date_time=end_date_time,
+                                    repeated_week_days=repeated_week_days)
+
+            polyLineFile = ContentFile(base64.b64decode(data['polyline']))
+            drive.polyline.save(str(drive.user_id) + "/" + str(drive.id), polyLineFile)
+
         except:
-            return Response(status.HTTP_400_BAD_REQUEST)
-        return Response(json, status.HTTP_201_CREATED)
+            Response(status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_201_CREATED)
 
 
 
