@@ -6,4 +6,4 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('user','profileImage')
+        fields = ('profile_image')

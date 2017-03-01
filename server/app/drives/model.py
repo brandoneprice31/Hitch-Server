@@ -24,6 +24,12 @@ class Drive(models.Model):
     end_sub_title = models.CharField(max_length = 100)
     end_date_time = models.DateTimeField()
 
+    # Rectangular region info.
+    max_lat = models.FloatField()
+    max_long = models.FloatField()
+    min_lat = models.FloatField()
+    min_long = models.FloatField()
+
     # Occurrence Info
     repeated_week_days = fields.ArrayField(models.IntegerField())
 
@@ -32,4 +38,4 @@ class Drive(models.Model):
 
 
     def __str__ (self):
-        return str(self.id)
+        return str(self.user.first_name + " " + self.user.last_name + "'s drive from " + self.start_title + " to " + self.end_title)

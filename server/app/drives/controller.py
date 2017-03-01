@@ -2,16 +2,20 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from mapbox import Distance
+from ..profiles.model import Profile
 
 from .model import Drive
 from django.contrib.auth.models import User
 from .serializer import DriveSerializer
 import json
 from django.core import serializers
+import datetime
 from django.utils.timezone import get_current_timezone
 from django.utils.dateparse import parse_datetime
 from django.core.files.base import ContentFile
 import base64
+from math import sqrt
 
 
 @api_view(['GET', 'POST'])
@@ -25,7 +29,7 @@ def user_drive_list(request):
     # GET
     if request.method == 'GET':
 
-        drives = Drive.objects.filter(user=request.user).values()
+        drives = Drive.objects.filter(user=request.user)
         driveSerializer = DriveSerializer(drives,many=True)
 
         return Response(driveSerializer.data, status.HTTP_200_OK)
@@ -46,6 +50,10 @@ def user_drive_list(request):
         end_sub_title = data['end_sub_title']
         end_date_time = parse_datetime(data['end_date_time'])
         repeated_week_days = data['repeated_week_days']
+        max_lat = data['max_lat']
+        max_long = data['max_long']
+        min_lat = data['min_lat']
+        min_long = data['min_long']
 
         try:
             drive = Drive.objects.create(user=request.user, start_lat=start_lat,
@@ -53,7 +61,8 @@ def user_drive_list(request):
                                     start_date_time=start_date_time, end_lat=end_lat,
                                     end_long=end_long, end_title=end_title,
                                     end_sub_title=end_sub_title, end_date_time=end_date_time,
-                                    repeated_week_days=repeated_week_days)
+                                    repeated_week_days=repeated_week_days, max_lat=max_lat,
+                                    max_long=max_long, min_lat=min_lat, min_long=min_long)
 
             polyLineFile = ContentFile(base64.b64decode(data['polyline']))
             drive.polyline.save(str(drive.user_id) + "/" + str(drive.id), polyLineFile)
@@ -92,3 +101,111 @@ def user_drive_detail(request, pk):
     elif request.method == 'DELETE':
         drive.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+@api_view(['POST'])
+def drive_search(request):
+
+    # Parse json object.
+    try:
+        data = json.loads(request.body)
+        pick_up_lat = data["pick_up_lat"]
+        pick_up_long = data["pick_up_long"]
+        drop_off_lat = data["drop_off_lat"]
+        drop_off_long = data["drop_off_long"]
+        start_date_time = parse_datetime(data["start_date_time"])
+        end_date_time = parse_datetime(data["end_date_time"])
+    except:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    # Build search query.
+    # First filter off of date range.
+    query = Drive.objects.all().filter(start_date_time__range=(start_date_time,end_date_time))
+
+    # Ensure that we're aren't pulling the user's drives.
+    if not request.user.is_anonymous:
+        query = query.exclude(user_id = request.user.id)
+
+    # Padding defines how far outside bounds you're able to go.
+    padding = 1.0
+
+    # Filter based off of pick_up.
+    query = query.filter(max_lat__gte = pick_up_lat - padding, min_lat__lte = pick_up_lat + padding)
+    query = query.filter(max_long__gte = pick_up_long - padding, min_long__lte = pick_up_long + padding)
+
+    # Filter based off of drop_off.
+    query = query.filter(max_lat__gte = drop_off_lat - padding, min_lat__lte = drop_off_lat + padding)
+    query = query.filter(max_long__gte = drop_off_long - padding, min_long__lte = drop_off_long + padding)
+
+    # Perform further programmatic filtering.
+    pick_up_point = (pick_up_lat,pick_up_long)
+    drop_off_point = (drop_off_lat, drop_off_long)
+
+    filteredDrives = []
+    for drive in query:
+
+        # Filter each drive based off of distances from pick up / drop off  to start / end
+        start_point = (drive.start_lat, drive.start_long)
+        end_point = (drive.end_lat, drive.end_long)
+
+        start_to_pick_up = distBetweenPointsSquared(start_point, pick_up_point)
+        start_to_drop_off = distBetweenPointsSquared(start_point, drop_off_point)
+
+        # If the hitch is going the same direction as the drive.
+        if start_to_pick_up <= start_to_drop_off:
+            end_to_pick_up = distBetweenPointsSquared(end_point, pick_up_point)
+            end_to_drop_off = distBetweenPointsSquared(end_point, drop_off_point)
+            if end_to_drop_off <= end_to_pick_up:
+                # Drive passed first round of filtering.
+
+                # Calculate an estimated time of pick up.
+                start_to_end_min =  (drive.end_date_time - drive.start_date_time).seconds / 60.0
+                start_to_end_dist =  sqrt(distBetweenPointsSquared(start_point, end_point))
+                drive_min_per_deg = start_to_end_min / start_to_end_dist
+                pick_up_to_drop_off_dist = sqrt(distBetweenPointsSquared(pick_up_point, drop_off_point))
+                min_from_pick_up_to_end = drive_min_per_deg * (end_to_drop_off + pick_up_to_drop_off_dist)
+                est_pick_up_time = drive.end_date_time - datetime.timedelta(minutes=int(min_from_pick_up_to_end))
+
+                # Convert drive to json and add special fields.
+                serializedDrive = DriveSerializer(drive).data
+                serializedDrive['estimated_pick_up_date_time'] = est_pick_up_time
+
+                # Get profile image.
+                try:
+                    profile_image = Profile.objects.get(user_id=drive.user_id).profile_image
+                    with open(profile_image.name, "rb") as profile_image_file:
+                        encoded_string = base64.b64encode(image_file.read())
+                        serializedDrive['profile_image'] = encoded_string
+                except:
+                    print('no profile_image')
+
+                filteredDrives.append(serializedDrive)
+
+    #serializer = DriveSerializer(filteredDrives, many=True)
+    return Response(filteredDrives, status=status.HTTP_200_OK)
+
+
+def distBetweenPointsSquared (pointA, pointB):
+    return (pointA[0] - pointB[0])**2 + (pointA[1] - pointB[1])**2
+
+def filterByDistance(jsonList):
+
+    service = Distance()
+
+    # Build distances list for Distance API.
+    distancesList = []
+    for json in jsonList:
+
+        # Append the Point feature.
+        distancesList.append({
+            'type': 'Feature',
+            'properties' : {'id' : json['id']},
+            'geometry' : { 'type': 'Point', 'coordinates': [json['start_lat'], json['start_long']]}
+        })
+
+        response = service.distances(distancesList, 'driving')
+
+        print(response.json())
