@@ -162,10 +162,11 @@ def drive_search(request):
                 # Drive passed first round of filtering.
 
                 # Calculate an estimated time of pick up.
+                pick_up_to_drop_off_dist = distBetweenPointsSquared(pick_up_point, drop_off_point)
                 start_to_end_min =  (drive.end_date_time - drive.start_date_time).seconds / 60.0
-                start_to_end_dist =  sqrt(distBetweenPointsSquared(start_point, end_point))
-                drive_min_per_deg = start_to_end_min / start_to_end_dist
-                pick_up_to_drop_off_dist = sqrt(distBetweenPointsSquared(pick_up_point, drop_off_point))
+                start_to_end_dist =  start_to_pick_up + pick_up_to_drop_off_dist + end_to_drop_off
+                start_to_end_straight = distBetweenPointsSquared(start_point, end_point)
+                drive_min_per_deg = start_to_end_min / start_to_end_dist * (start_to_end_dist / start_to_end_straight)
                 min_from_pick_up_to_end = drive_min_per_deg * (end_to_drop_off + pick_up_to_drop_off_dist)
                 est_pick_up_time = drive.end_date_time - datetime.timedelta(minutes=int(min_from_pick_up_to_end))
 
@@ -180,7 +181,7 @@ def drive_search(request):
                         encoded_string = base64.b64encode(image_file.read())
                         serializedDrive['profile_image'] = encoded_string
                 except:
-                    print('no profile_image')
+                    print("no profile")
 
                 filteredDrives.append(serializedDrive)
 
@@ -189,7 +190,7 @@ def drive_search(request):
 
 
 def distBetweenPointsSquared (pointA, pointB):
-    return (pointA[0] - pointB[0])**2 + (pointA[1] - pointB[1])**2
+    return sqrt((pointA[0] - pointB[0])**2 + (pointA[1] - pointB[1])**2)
 
 def filterByDistance(jsonList):
 
