@@ -161,6 +161,9 @@ def drive_search(request):
             if end_to_drop_off <= end_to_pick_up:
                 # Drive passed first round of filtering.
 
+                # Filter by distance api.
+                #print(filterByDistance([start_point, pick_up_point, drop_off_point, end_point]))
+
                 # Calculate an estimated time of pick up.
                 pick_up_to_drop_off_dist = distBetweenPointsSquared(pick_up_point, drop_off_point)
                 start_to_end_min =  (drive.end_date_time - drive.start_date_time).seconds / 60.0
@@ -185,28 +188,28 @@ def drive_search(request):
 
                 filteredDrives.append(serializedDrive)
 
-    #serializer = DriveSerializer(filteredDrives, many=True)
     return Response(filteredDrives, status=status.HTTP_200_OK)
 
 
 def distBetweenPointsSquared (pointA, pointB):
     return sqrt((pointA[0] - pointB[0])**2 + (pointA[1] - pointB[1])**2)
 
-def filterByDistance(jsonList):
+def filterByDistance(points):
 
     service = Distance()
 
-    # Build distances list for Distance API.
-    distancesList = []
-    for json in jsonList:
+    geoJsonList = []
 
-        # Append the Point feature.
-        distancesList.append({
-            'type': 'Feature',
-            'properties' : {'id' : json['id']},
-            'geometry' : { 'type': 'Point', 'coordinates': [json['start_lat'], json['start_long']]}
+    for point_iter in range(len(points)):
+        geoJsonList.append({
+        'type': 'Feature',
+        'properties': {'name': ['start','pick_up','drop_off','end'][point_iter]},
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [points[point_iter][0], points[point_iter][1]]
+            }
         })
 
-        response = service.distances(distancesList, 'driving')
-
-        print(response.json())
+    response = service.distances(geoJsonList, 'driving')
+    print(geoJsonList)
+    return(response.json()['durations'])

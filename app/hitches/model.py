@@ -29,7 +29,7 @@ class Hitch(models.Model):
     drop_off_date_time = models.DateTimeField()
 
     # Occurrence Info
-    repeateded_week_days = fields.ArrayField(models.IntegerField())
+    repeated_week_days = fields.ArrayField(models.IntegerField())
     accepted = models.BooleanField()
 
     # Polyline
