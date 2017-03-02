@@ -97,8 +97,8 @@ DATABASES = {
         'NAME': 'brandonprice',
         'USER': '',
         'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'HOST': '71.232.23.175',
+        'PORT': '6122',
     }
 }
 
