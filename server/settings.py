@@ -25,7 +25,7 @@ SECRET_KEY = '1o7lm2-6^sr3)x8185!*rn2l6l(4k#!$omfpigr!_js(4&k&#!'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['sheltered-citadel-17296.herokuapp.com']
 
 
 # Application definition
