@@ -92,15 +92,15 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
 #DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'brandonprice',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql',
+#        'NAME': 'brandonprice',
+#        'USER': '',
+#        'PASSWORD': '',
+#        'HOST': 'localhost',
+#        'PORT': '5432',
+#    }
+#}
 
 DATABASES = {
     'default': {
