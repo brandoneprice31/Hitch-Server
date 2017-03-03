@@ -16,6 +16,7 @@ from django.utils.dateparse import parse_datetime
 from django.core.files.base import ContentFile
 import base64
 from math import sqrt
+from django.db.models import Q
 
 
 @api_view(['GET', 'POST'])
@@ -123,7 +124,7 @@ def drive_search(request):
 
     # Build search query.
     # First filter off of date range.
-    query = Drive.objects.all().filter(start_date_time__range=(start_date_time,end_date_time))
+    query = Drive.objects.all().filter(Q(start_date_time__lte=end_date_time) | Q(repeated_week_days__len=0, start_date_time__range=(start_date_time,end_date_time)))
 
     # Ensure that we're aren't pulling the user's drives.
     if not request.user.is_anonymous:
