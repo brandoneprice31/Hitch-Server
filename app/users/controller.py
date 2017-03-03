@@ -12,10 +12,11 @@ import json
 from django.core.files.base import ContentFile
 import base64
 
+
+
 @api_view(['GET', 'POST'])
 @permission_classes((AllowAny,))
 def user_list(request):
-
 
     # GET
     if request.method == 'GET':
@@ -56,7 +57,7 @@ def user_list(request):
 
             if 'profile_image' in data:
                 imageFile = ContentFile(base64.b64decode(data['profile_image']))
-                profile.profile_image.save(str(profile.id) + "/profile_image.png", imageFile)
+                profile.profile_image.save("profile_image.png", imageFile)
 
             profile.save()
 
