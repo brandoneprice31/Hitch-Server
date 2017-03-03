@@ -45,7 +45,7 @@ def hitch_list(request):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         # Associate drive.
-        drive = hitchJSON["drive"]
+        drive = hitchJSON["drive_id"]
 
         # Driver Info
         user = hitchJSON["user"]
@@ -71,8 +71,7 @@ def hitch_list(request):
         pick_up_to_drop_off_polyline = hitchJSON["pick_up_to_drop_off_polyline"]
         drop_off_to_end_polyline = hitchJSON["drop_off_to_end_polyline"]
 
-        #try:
-        if True:
+        try:
             hitch = Hitch.objects.create(drive_id=drive,user_id=user,pick_up_lat=pick_up_lat,pick_up_long=pick_up_long,
                                 pick_up_title=pick_up_title, pick_up_sub_title=pick_up_sub_title, drop_off_lat=drop_off_lat,
                                 drop_off_long=drop_off_long, drop_off_title=drop_off_title,drop_off_sub_title=drop_off_sub_title,
@@ -87,7 +86,7 @@ def hitch_list(request):
 
             drop_off_to_end_polylineFile = ContentFile(base64.b64decode(drop_off_to_end_polyline))
             hitch.drop_off_to_end_polyline.save(str(hitch.user_id) + "/" + str(hitch.id) + "/DropOffToEnd", drop_off_to_end_polylineFile)
-        #except:
-        #    return Response(status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_201_CREATED)
