@@ -1,20 +1,17 @@
 from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
-from .users.controller import user_list, user_detail, log_out
-from .drives.controller import user_drive_list, user_drive_detail, drive_search
 from rest_framework.authtoken import views
-from .hitches.controller import hitch_list
+from .users.urls import user_urls
+from .drives.urls import drive_urls
+from .hitches.urls import hitch_urls
 
 
 urlpatterns = [
-    url(r'^users/$', user_list),
-    url(r'^users/(?P<pk>[0-9]+)$', user_detail),
-    url(r'^get-users-token/$', views.obtain_auth_token),
-    url(r'^log-out/$', log_out),
-    url(r'^user-drives/$' ,user_drive_list),
-    url(r'^user-drives/(?P<pk>[0-9]+)$', user_drive_detail),
-    url(r'^drive-search/$',drive_search),
-    url(r'^hitches/$',hitch_list)
+    url(r'^api-token-auth/', views.obtain_auth_token)
 ]
+
+urlpatterns += user_urls
+urlpatterns += drive_urls
+urlpatterns += hitch_urls
 
 urlpatterns = format_suffix_patterns(urlpatterns)

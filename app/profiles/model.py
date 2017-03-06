@@ -4,15 +4,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
-def user_media_directory_path(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    return 'user_{0}/{1}'.format(instance.user.id, filename)
-
 # Create your models here.
 class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_image = models.ImageField(upload_to=user_media_directory_path, blank=True)
+    profile_image = models.BinaryField()
 
     def __str__ (self):
         return self.user.first_name + " " + self.user.last_name
