@@ -6,11 +6,12 @@ from rest_framework.authtoken.models import Token
 from django.contrib.postgres import fields
 import base64
 
+
 # Create your models here.
 class Drive(models.Model):
 
     # Driver Info
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    driver = models.ForeignKey(User, on_delete=models.CASCADE)
 
     # Routing Info.
     start_lat = models.FloatField()
@@ -34,8 +35,8 @@ class Drive(models.Model):
     repeated_week_days = fields.ArrayField(models.IntegerField())
 
     # Polyline
-    polyline = models.FileField(upload_to='./app/drives/files/', blank=True)
+    polyline = models.BinaryField()
 
 
     def __str__ (self):
-        return str(self.user.first_name + " " + self.user.last_name + "'s drive from " + self.start_title + " to " + self.end_title)
+        return str(self.driver.first_name + " " + self.driver.last_name + "'s drive from " + self.start_title + " to " + self.end_title)

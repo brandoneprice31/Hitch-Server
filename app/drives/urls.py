@@ -3,7 +3,9 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from .controller import *
 
 drive_urls = [
-    url(r'^drives/all/$', user_drive_list),
-    url(r'^drives/detail/$', user_drive_detail),
-    url(r'^drives/search/$', drive_search)
+    url(r'^drives/$', list_all),
+    url(r'^drives/detail/$', detail),
+    url(r'^drives/search/$', search),
+    url(r'^drives/create/$', create),
+    url(r'^drives/delete/$', delete)
 ]

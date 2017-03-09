@@ -101,6 +101,7 @@ def login(request):
             userSerializer = UserSerializer(user)
             response = userSerializer.data
             response['token'] = Token.objects.get_or_create(user=user)[0].key
+            response['email'] = data['email']
             return Response(response, status=status.HTTP_202_ACCEPTED)
 
         else:

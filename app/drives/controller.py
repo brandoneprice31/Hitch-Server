@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from .serializer import DriveSerializer
 import json
 from django.core import serializers
+from ..users.serializer import UserSerializer
 import datetime
 from django.utils.timezone import get_current_timezone
 from django.utils.dateparse import parse_datetime
@@ -19,70 +20,64 @@ from math import sqrt
 from django.db.models import Q
 
 
-@api_view(['GET', 'POST'])
-def user_drive_list(request):
+
+
+# Gets all user's drives.
+# 401 - un-authorized.
+# 200 - got all of the user's drives.
+@api_view(['GET'])
+def list_all(request):
 
     # Check if the user is anonymous.
     if request.user.is_anonymous:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+    drives = Drive.objects.filter(driver=request.user)
+    driveSerializer = DriveSerializer(drives,many=True)
 
-    # GET
-    if request.method == 'GET':
-
-        drives = Drive.objects.filter(user=request.user)
-        driveSerializer = DriveSerializer(drives,many=True)
-
-        return Response(driveSerializer.data, status.HTTP_200_OK)
-
-
-    # POST
-    elif request.method == 'POST':
-
-        data = json.loads(request.body)
-        start_lat = data['start_lat']
-        start_long = data['start_long']
-        start_title = data['start_title']
-        start_sub_title = data['start_sub_title']
-        start_date_time = parse_datetime(data['start_date_time'])
-        end_lat = data['end_lat']
-        end_long = data['end_long']
-        end_title = data['end_title']
-        end_sub_title = data['end_sub_title']
-        end_date_time = parse_datetime(data['end_date_time'])
-        repeated_week_days = data['repeated_week_days']
-        max_lat = data['max_lat']
-        max_long = data['max_long']
-        min_lat = data['min_lat']
-        min_long = data['min_long']
-
-        try:
-            drive = Drive.objects.create(user=request.user, start_lat=start_lat,
-                                    start_long=start_long, start_title=start_title,
-                                    start_date_time=start_date_time, end_lat=end_lat,
-                                    end_long=end_long, end_title=end_title,
-                                    end_sub_title=end_sub_title, end_date_time=end_date_time,
-                                    repeated_week_days=repeated_week_days, max_lat=max_lat,
-                                    max_long=max_long, min_lat=min_lat, min_long=min_long)
-
-            polyLineFile = ContentFile(base64.b64decode(data['polyline']))
-            drive.polyline.save(str(drive.user_id) + "/" + str(drive.id), polyLineFile)
-
-        except:
-            Response(status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(status=status.HTTP_201_CREATED)
+    return Response(driveSerializer.data, status.HTTP_200_OK)
 
 
 
 
 
-@api_view(['GET', 'DELETE'])
-def user_drive_detail(request, pk):
+# Creates a drive for the user.
+# 400 - Bad request.
+# 201 - created a drive for that user.
+# 401 - User is un-authorized
+@api_view(['POST'])
+def create(request):
+
+    # Check if the user is anonymous.
+    if request.user.is_anonymous:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    data = json.loads(request.body)
+    driveSerializer = DriveSerializer(data=data, context={'driver_id': request.user.id})
+
+    if driveSerializer.is_valid():
+        driveSerializer.save()
+        return Response(driveSerializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(driveSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+# Gets the details of the given drive.
+# 400 - Bad request.
+# 200 - returned the user's drives..
+# 401 - User is un-authorized
+@api_view(['POST'])
+def detail(request):
 
     # Get the drive
     try:
-        drive = Drive.objects.get(pk=pk)
+        data = json.loads(request.body)
+        drive = Drive.objects.get(pk=data['id'])
     except:
         return Response(status.HTTP_400_BAD_REQUEST)
 
@@ -91,27 +86,48 @@ def user_drive_detail(request, pk):
     if request.user.id != drive.user.id:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-
-    # GET
-    if request.method == 'GET':
-        driveSerializer = DriveSerializer(drive)
-        return Response(driveSerializer.data, status=status.HTTP_200_OK)
-
-
-    # DELETE
-    elif request.method == 'DELETE':
-        drive.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    driveSerializer = DriveSerializer(drive)
+    return Response(driveSerializer.data, status=status.HTTP_200_OK)
 
 
 
 
 
+# Deletes a drive.
+# 400 - Bad request.
+# 204 - Deleted the user's drive.
+# 401 - User is un-authorized
+@api_view(['DELETE'])
+def delete(request):
+
+    # Get the drive
+    try:
+        data = json.loads(request.body)
+        drive = Drive.objects.get(pk=data['id'])
+    except:
+        return Response(status.HTTP_400_BAD_REQUEST)
+
+
+    # Check if the user is authorized to view that drive.
+    if request.user.id != drive.user.id:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    drive.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+
+# Search for drives given coordinates and time frame.
+# 400 - Bad request.
+# 200 - Returned available drives (it could be empty).
 @api_view(['POST'])
-def drive_search(request):
+def search(request):
 
     # Parse json object.
-    try:
+    if True:
         data = json.loads(request.body)
         pick_up_lat = data["pick_up_lat"]
         pick_up_long = data["pick_up_long"]
@@ -119,7 +135,7 @@ def drive_search(request):
         drop_off_long = data["drop_off_long"]
         start_date_time = parse_datetime(data["start_date_time"])
         end_date_time = parse_datetime(data["end_date_time"])
-    except:
+    else:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     # Build search query.
@@ -128,7 +144,7 @@ def drive_search(request):
 
     # Ensure that we're aren't pulling the user's drives.
     if not request.user.is_anonymous:
-        query = query.exclude(user_id = request.user.id)
+        query = query.exclude(driver_id = request.user.id)
 
     # Padding defines how far outside bounds you're able to go.
     padding = 1.0
@@ -152,13 +168,13 @@ def drive_search(request):
         start_point = (drive.start_lat, drive.start_long)
         end_point = (drive.end_lat, drive.end_long)
 
-        start_to_pick_up = distBetweenPointsSquared(start_point, pick_up_point)
-        start_to_drop_off = distBetweenPointsSquared(start_point, drop_off_point)
+        start_to_pick_up = distBetweenPoints(start_point, pick_up_point)
+        start_to_drop_off = distBetweenPoints(start_point, drop_off_point)
 
         # If the hitch is going the same direction as the drive.
         if start_to_pick_up <= start_to_drop_off:
-            end_to_pick_up = distBetweenPointsSquared(end_point, pick_up_point)
-            end_to_drop_off = distBetweenPointsSquared(end_point, drop_off_point)
+            end_to_pick_up = distBetweenPoints(end_point, pick_up_point)
+            end_to_drop_off = distBetweenPoints(end_point, drop_off_point)
             if end_to_drop_off <= end_to_pick_up:
                 # Drive passed first round of filtering.
 
@@ -166,10 +182,10 @@ def drive_search(request):
                 #print(filterByDistance([start_point, pick_up_point, drop_off_point, end_point]))
 
                 # Calculate an estimated time of pick up.
-                pick_up_to_drop_off_dist = distBetweenPointsSquared(pick_up_point, drop_off_point)
+                pick_up_to_drop_off_dist = distBetweenPoints(pick_up_point, drop_off_point)
                 start_to_end_min =  (drive.end_date_time - drive.start_date_time).seconds / 60.0
                 start_to_end_dist =  start_to_pick_up + pick_up_to_drop_off_dist + end_to_drop_off
-                start_to_end_straight = distBetweenPointsSquared(start_point, end_point)
+                start_to_end_straight = distBetweenPoints(start_point, end_point)
                 drive_min_per_deg = start_to_end_min / start_to_end_dist * (start_to_end_dist / start_to_end_straight)
                 min_from_pick_up_to_end = drive_min_per_deg * (end_to_drop_off + pick_up_to_drop_off_dist)
                 est_pick_up_time = drive.end_date_time - datetime.timedelta(minutes=int(min_from_pick_up_to_end))
@@ -178,23 +194,19 @@ def drive_search(request):
                 serializedDrive = DriveSerializer(drive).data
                 serializedDrive['estimated_pick_up_date_time'] = est_pick_up_time
 
-                # Get profile image.
-                try:
-                    profile_image = Profile.objects.get(user_id=drive.user_id).profile_image
-                    with open(profile_image.name, "rb") as profile_image_file:
-                        encoded_string = base64.b64encode(image_file.read())
-                        serializedDrive['profile_image'] = encoded_string
-                except:
-                    print("no profile")
-
                 filteredDrives.append(serializedDrive)
 
     return Response(filteredDrives, status=status.HTTP_200_OK)
 
 
-def distBetweenPointsSquared (pointA, pointB):
+
+
+# Function that finds the distance between two points.
+def distBetweenPoints (pointA, pointB):
     return sqrt((pointA[0] - pointB[0])**2 + (pointA[1] - pointB[1])**2)
 
+
+# Function that filters a list of points using mapbox distance api.
 def filterByDistance(points):
 
     service = Distance()
