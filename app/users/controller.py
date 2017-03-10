@@ -52,6 +52,27 @@ def create(request):
 
 
 
+# Updates user:
+# 200 - user updated
+# 401 - un-authorized.
+# 400 - bad request.
+@api_view(['POST'])
+def update(request):
+
+    if request.user.is_anonymous():
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    # User is trying to be updated.
+    data = json.loads(request.body)
+
+    userSerializer = UserSerializer(request.user, data=data, partial=True)
+
+    if userSerializer.is_valid():
+        userSerializer.save()
+        return Response(userSerializer.data, status=status.HTTP_200_OK)
+    else:
+        Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 # Checks if the user exists:
 # 409 - user does exist.

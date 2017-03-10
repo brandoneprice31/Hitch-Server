@@ -9,5 +9,6 @@ user_urls = [
     url(r'^users/login/$', login),
     url(r'^users/detail/$', detail),
     url(r'^users/delete/$', delete),
-    url(r'^users/log-out/$', log_out)
+    url(r'^users/log-out/$', log_out),
+    url(r'^users/update/$', update)
 ]

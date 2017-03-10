@@ -40,3 +40,16 @@ class UserSerializer(serializers.ModelSerializer):
             user.profile.save()
 
         return user
+
+    def update(self, instance, validated_data):
+
+        if 'first_name' in validated_data:
+            instance.first_name = validated_data['first_name']
+        if 'last_name' in validated_data:
+            instance.last_name = validated_data['last_name']
+        if 'profile' in validated_data:
+            instance.profile.profile_image = validated_data['profile']['profile_image']
+
+        instance.save()
+        instance.profile.save()
+        return instance
