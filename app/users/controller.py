@@ -165,13 +165,17 @@ def detail(request):
 # Deletes a single user.
 # 401 - user isn't authorized.
 # 204 - user has been deleted.
+# 400 - bad request.
 @api_view(['DELETE'])
 def delete(request):
         # Only the authorized user can delete themselves.
         if request.user.is_anonymous():
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        request.user.delete()
+        try:
+            request.user.delete()
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
