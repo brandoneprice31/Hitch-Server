@@ -3,6 +3,7 @@ from .model import Hitch
 from ..users.serializer import UserSerializer
 from ..drives.model import Drive
 from ..common.fields import BytesField
+from django.db.models import Q
 
 
 class GetDriveFromHitchSerializer(serializers.ModelSerializer):
