@@ -4,6 +4,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from mapbox import Distance
 from ..profiles.model import Profile
+from ..hitches.model import Hitch
 
 from .model import Drive
 from django.contrib.auth.models import User
@@ -127,7 +128,7 @@ def delete(request):
 def search(request):
 
     # Parse json object.
-    if True:
+    try:
         data = json.loads(request.body)
         pick_up_lat = data["pick_up_lat"]
         pick_up_long = data["pick_up_long"]
@@ -135,7 +136,7 @@ def search(request):
         drop_off_long = data["drop_off_long"]
         start_date_time = parse_datetime(data["start_date_time"])
         end_date_time = parse_datetime(data["end_date_time"])
-    else:
+    except:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     # Build search query.
@@ -198,6 +199,38 @@ def search(request):
                 filteredDrives.append(serializedDrive)
 
     return Response(filteredDrives, status=status.HTTP_200_OK)
+
+
+
+# Accepts a hitch request.
+# 400 - Bad request.
+# 200 - Accepted.
+# 401 - User is un-authorized
+@api_view(['POST'])
+def accept_hitch (request):
+
+    if request.user.is_anonymous():
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    # Get JSON.
+    data = json.loads(request.body)
+
+    try:
+
+        drive = Drive.objects.get(id=data["drive_id"])
+
+        if drive.driver_id != request.user.id:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        hitch = Hitch.objects.get(id=data["hitch_id"])
+        hitch.accepted = True
+        hitch.save()
+        # Notify the hitchhiker.
+
+    except:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    return Response(status=status.HTTP_200_OK)
 
 
 

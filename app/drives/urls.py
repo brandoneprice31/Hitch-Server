@@ -7,5 +7,6 @@ drive_urls = [
     url(r'^drives/detail/$', detail),
     url(r'^drives/search/$', search),
     url(r'^drives/create/$', create),
-    url(r'^drives/delete/$', delete)
+    url(r'^drives/delete/$', delete),
+    url(r'^drives/accept_hitch/$', accept_hitch)
 ]

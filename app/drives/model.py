@@ -32,7 +32,7 @@ class Drive(models.Model):
     min_long = models.FloatField()
 
     # Occurrence Info
-    repeated_week_days = fields.ArrayField(models.IntegerField())
+    repeated_week_days = fields.ArrayField(models.IntegerField(), blank=True)
 
     # Polyline
     polyline = models.BinaryField()
