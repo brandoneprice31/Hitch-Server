@@ -92,27 +92,27 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.postgresql',
-#        'NAME': 'brandonprice',
-#        'USER': '',
-#        'PASSWORD': '',
-#        'HOST': 'localhost',
-#        'PORT': '5432',
-#    }
-#}
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'df9lomo27p9aft',
-        'USER': 'kucfsdchbblltq',
-        'PASSWORD': '7fc2be6f0eafa235a448d9e1572f017a0851b7e16f6919532990f7c5ea844538',
-        'HOST': 'ec2-54-163-234-140.compute-1.amazonaws.com',
+        'NAME': 'brandonprice',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
+
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql',
+#        'NAME': 'df9lomo27p9aft',
+#        'USER': 'kucfsdchbblltq',
+#        'PASSWORD': '7fc2be6f0eafa235a448d9e1572f017a0851b7e16f6919532990f7c5ea844538',
+#        'HOST': 'ec2-54-163-234-140.compute-1.amazonaws.com',
+#        'PORT': '5432',
+#    }
+#}
 
 
 # Password validation

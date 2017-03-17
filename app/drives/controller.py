@@ -139,9 +139,11 @@ def search(request):
     except:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    print(data)
+
     # Build search query.
     # First filter off of date range.
-    query = Drive.objects.all().filter(start_date_time__range=(start_date_time,end_date_time))
+    query = Drive.objects.all().filter(Q(repeated_week_days__len__gt = 0) | Q(start_date_time__range=(start_date_time,end_date_time)))
     query = query.filter(Q(start_date_time__lte=end_date_time) | Q(repeated_week_days__len=0))
 
     # Ensure that we're aren't pulling the user's drives.
